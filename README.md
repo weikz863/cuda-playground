@@ -40,3 +40,8 @@ Hello from thread 7
 Learn the basic concept of CUDA and implement the following files.
 - `src/basic.cu`
 - `src/gemm.cu`
+
+## Reference and Tutorials
+
+- [CUDA C++ Programming Guide](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html)
+- [Awesome-CUDA](https://github.com/Erkaman/Awesome-CUDA)
