@@ -8,7 +8,7 @@
 // You may increase this value to test larger matrices
 // But it will be slow on CPU
 constexpr int MAXN = 1 << 28;
-
+constexpr int TPB = 1 << 8;
 void vectorAddCPU(float *a, float *b, float *c, const int N) {
   for (int i = 0; i < N; ++i) {
     c[i] = a[i] + b[i];
@@ -39,7 +39,8 @@ bool compare(float *a, float *b, const int N) {
 
 __global__ void vectorAddGPU(float *a, float *b, float *c, const int N) {
   // Implement your vector add kernel here
-  
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  c[i] = a[i] + b[i];
 }
 
 int main() {
@@ -57,15 +58,25 @@ int main() {
   printf("CPU time: %.3fs\n", elapsed.count());
 
   // ************** START GPU MEMORY ALLOCATION **************
-  // Implement your code here
-  
+  size_t size = sizeof(float) * MAXN;
+  float *a_d, *b_d, *c_d;
+  cudaMalloc(&a_d, size);
+  cudaMalloc(&b_d, size);
+  cudaMalloc(&c_d, size);
+  cudaMemcpy(a_d, a, size, cudaMemcpyHostToDevice);
+  cudaMemcpy(b_d, b, size, cudaMemcpyHostToDevice);
+
   // ************** START GPU COMPUTATION **************
   start = std::chrono::high_resolution_clock::now();
-  // Implement your code here
+  vectorAddGPU<<<MAXN / TPB, TPB>>>(a_d, b_d, c_d, MAXN);
   end = std::chrono::high_resolution_clock::now();
 
   float *result = new float[MAXN];
   // Copy the result from GPU to CPU
+  cudaMemcpy(result, c_d, size, cudaMemcpyDeviceToHost);
+  cudaFree(a_d);
+  cudaFree(b_d);
+  cudaFree(c_d);
   if (compare(c, result, MAXN)) {
     std::chrono::duration<double> new_elapsed = end - start;
     printf("GPU time: %.3fs\n", new_elapsed.count());
